@@ -15,9 +15,10 @@ public class Main {
 		}
 		
 		Dynamics<Integer> dynamics = new Dynamics<Integer>(agents,false);
-		System.out.println(dynamics.count(new Predicate.OpinionPredicate<Integer>(0)));
 
 		dynamics.exportEvolution(100,new Predicate[] {new Predicate.OpinionPredicate<Integer>(0)});
+		
+		System.out.println("Simulation over.");
 	}
 	
 	
