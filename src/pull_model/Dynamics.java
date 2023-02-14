@@ -2,6 +2,8 @@ package pull_model;
 
 import java.util.ArrayList;
 
+import export.XMLWriter;
+
 /**
  * The class handling the core of the dynamics, i.e., activating agents,
  * sampling opinions, and checking if a consensus has been reached.
@@ -165,6 +167,32 @@ public class Dynamics<T> {
 			if (a.satisfies(predicate)) result++;
 		}
 		return result;
+	}
+	
+	/**
+	 * For each predicate in a given list, computes the number of agents satisfying it over time.
+	 * @param timeHorizon The time for which the simulation should be run.
+	 * @param predicates The list of predicates to follow.
+	 */
+	public void exportEvolution(int timeHorizon, Predicate[] predicates) {
+		
+		int nPredicates = predicates.length;
+		
+		// Counting opinions over time
+		int[][] predicatesCount = new int[nPredicates][timeHorizon];
+		
+		for (int t=0 ; t<timeHorizon ; t++) {
+			
+			for (int j=0 ; j<nPredicates ; j++) predicatesCount[j][t] = count(predicates[j]);
+			run(1);
+		}
+
+		// Export
+		XMLWriter writer = new XMLWriter("pullEvolution","xlabel","Time","ylabel","Number of agents");
+		for (int j=0 ; j<nPredicates ; j++) writer.plot("","team_"+j,"marker","o","label",predicates[j].getLabel());
+		for (int j=0 ; j<nPredicates ; j++) writer.addData("team_"+j,predicatesCount[j]);
+		writer.close();
+		
 	}
 	
 	
