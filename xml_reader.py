@@ -146,33 +146,6 @@ def plot(filename,show=True,save=False):
     
 
 plot("tmp.xml",save=False)
-#plot('res/plot2.xml',save=True)
-
-"""
-plt.rcParams['font.size'] = '15'
-plt.rcParams['text.usetex'] = 'True'
-plt.plot([1,2],[1,3],label="$22 \log n$")
-plt.legend()
-plt.show()
-"""
-
-"""
-def test():
-    
-    for i in range(200):
-        print(i)
-        plot("res_spec/foragerScrounger"+str(i)+".xml",show=False,save=True)
-
-
-test()
-
-"""
-
-
-
-
-
-
 
 
 
