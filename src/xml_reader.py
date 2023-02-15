@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors
 import xml.etree.ElementTree as ET
 from ast import literal_eval
+import sys
 
 def parse1Darray(s):
     
