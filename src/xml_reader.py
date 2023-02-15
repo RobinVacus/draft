@@ -145,7 +145,20 @@ def plot(filename,show=True,save=False):
         plt.close()
     
 
-plot("tmp.xml",save=False)
+if __name__ == "__main__":
+
+    if len(sys.argv) == 1:
+        
+        plot("tmp.xml",save=False)
+
+    if len(sys.argv) == 2:
+
+        plot(sys.argv[1],save=False)
+
+    if len(sys.argv) == 3 and (sys.argv[1] == "-s" or sys.argv[1] == "--save"):
+
+        plot(sys.argv[2],save=True)
+
 
 
 
