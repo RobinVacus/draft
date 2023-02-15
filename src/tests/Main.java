@@ -22,7 +22,7 @@ public class Main {
 		
 		// Then we fill the list with agents randomly initialized
 		for (int i=1 ; i<n ; i++) {
-			agents.add(new IsabellaAgent(sampleSize,Utils.random.nextInt(2)));
+			agents.add(new LucaAgent(sampleSize,Utils.random.nextInt(2)));
 		}
 		
 		// We create a dynamics (in the parallel setting)
