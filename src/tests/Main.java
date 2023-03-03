@@ -9,10 +9,10 @@ public class Main {
 	public static void main(String [] args) {
 		
 		// Number of agents
-		int n = 10000;
+		int n = 1000;
 		
 		// Sample size
-		int sampleSize = 101;
+		int sampleSize = 20;
 		
 		// The list that contains the agents
 		ArrayList<Agent<Integer>> agents = new ArrayList<Agent<Integer>>();
@@ -22,7 +22,7 @@ public class Main {
 		
 		// Then we fill the list with agents randomly initialized
 		for (int i=1 ; i<n ; i++) {
-			agents.add(new LucaAgent(sampleSize,Utils.random.nextInt(2)));
+			agents.add(new TrendAgent(sampleSize,Utils.random.nextInt(100)));
 		}
 		
 		// We create a dynamics (in the parallel setting)
@@ -30,7 +30,7 @@ public class Main {
 		
 		// We export the result of one simulation over 100 rounds,
 		// in which we count the number of agents with opinion 0 (the correct one)
-		dynamics.exportEvolution(100,new Predicate[] {new Predicate.OpinionPredicate<Integer>(0)});
+		dynamics.exportEvolution(1000, new Predicate[] {new Predicate.OpinionPredicate<Integer>(0)});
 		
 		System.out.println("Simulation over.");
 	}
