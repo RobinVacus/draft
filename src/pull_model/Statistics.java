@@ -161,7 +161,7 @@ public class Statistics {
 		
 	}
 	
-	public static void compute(int logMin, int logMax) {
+	public static void compute(int logMin, int logMax, boolean append) {
 		
 		for (int log = logMin ; log<=logMax ; log++) {
 			
@@ -170,23 +170,26 @@ public class Statistics {
 			for (IntegerMapping mapping : mappings) {
 				
 				int k = mapping.apply(n);
+				Statistics stats = new Statistics(n,k);
 				
 				try {
 					
-					readFile(n,k);
-					System.out.println("Already existing file for n = "+n+", k = "+k);
+					stats = readFile(n,k);
+					if (!append) {
+						System.out.println("Already existing file for n = "+n+", k = "+k);
+						continue;
+					}
 					
 				} catch(FileNotFoundException e) {
-					
-					System.out.println("Processing n = "+n+", k = "+k);
-					Statistics stats = new Statistics(n,k);
-					
-					int iterations = 10*n;
-					stats.update(iterations);
-					
-					stats.writeToFile();
-					
+						
 				}
+				
+				System.out.println("Processing n = "+n+", k = "+k);
+				
+				int iterations = 10*n;
+				stats.update(iterations);
+				
+				stats.writeToFile();
 				
 			}
 			
@@ -250,13 +253,16 @@ public class Statistics {
 
 		writer.close();
 		
-		
 	}
 	
 	public static void main(String [] args) throws NumberFormatException, FileNotFoundException {
 		
 		if (args.length == 3 && args[0].equals("--compute")) {
-			compute(Integer.valueOf(args[1]),Integer.valueOf(args[2]));
+			compute(Integer.valueOf(args[1]),Integer.valueOf(args[2]),false);
+		}
+		
+		if (args.length == 3 && args[0].equals("--append")) {
+			compute(Integer.valueOf(args[1]),Integer.valueOf(args[2]),true);
 		}
 		
 		else if (args.length == 3 && args[0].equals("--print")) {
@@ -269,7 +275,7 @@ public class Statistics {
 		
 		else {
 			
-			export(5,8);
+			//compute(5,8,true);
 			
 		}
 	}
