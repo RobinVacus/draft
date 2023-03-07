@@ -1,8 +1,11 @@
 package pull_model;
 
+import java.io.FileNotFoundException;
+import java.util.ArrayList;
 import java.util.LinkedList;
 
 import export.CSVWriter;
+import export.XMLWriter;
 
 public class Statistics {
 	
@@ -90,19 +93,22 @@ public class Statistics {
 		
 	}
 	
-	public static Statistics readFile(int n, int k) {
-		
-		String filename = "n"+n+"_k"+k;
-		int[][] data = CSVWriter.readFile(filename);
-		return new Statistics(n,k,data);
-		
-		
-	}
-	
 	public double averageConvergenceTime(int configuration) {
 		
 		if (configuration == n-1) return 0;
 		return ((double) data[configuration][1] / data[configuration][0]);
+		
+	}
+	
+	public double maxAverageConvergenceTime() {
+		
+		double max = 0;
+		for (int i=0 ; i<n-1 ; i++) {
+			
+			double time = averageConvergenceTime(i);
+			if (time > max) max = time;
+		}
+		return max;
 		
 	}
 	
@@ -136,25 +142,112 @@ public class Statistics {
 		}
 	}
 	
-	public static void show(int n, int k) {
+	public static Statistics readFile(int n, int k) throws FileNotFoundException {
+		
+		String filename = "n"+n+"_k"+k;
+		int[][] data = CSVWriter.readFile(filename);
+		return new Statistics(n,k,data);
+		
+		
+	}
+	
+	/*
+	public static Statistics getStatistics(int n, int k) {
+		
+		try {
+			
+			return readFile(n,k);
+			
+		} catch (FileNotFoundException e) {
+			
+			Statistics stats = new Statistics(n,k);
+			stats.update(10*n);
+			return stats;
+			
+		}
+		
+	}
+	*/
+	
+	public static void show(int n, int k) throws FileNotFoundException {
 		
 		Statistics stats = Statistics.readFile(n,k);
 		System.out.println(stats);
 		
 	}
 	
-	public static void main(String [] args) {
+	public static void plot(XMLWriter writer, int[] populationSize, int[] sampleSize, String label) {
+		
+		ArrayList<Integer> pop = new ArrayList<Integer>();
+		ArrayList<Double> times = new ArrayList<Double>();
+		
+		for (int i=0 ; i<populationSize.length ; i++) {
 			
-		if (args[0].equals("--explore")) {
+			int n = populationSize[i];
+			int k = sampleSize[i];
+			try {
+				times.add(readFile(n,k).maxAverageConvergenceTime());
+				pop.add(n);
+			} catch (FileNotFoundException e) {
+			
+			}
+			
+		}
+		
+		writer.plot(label+"_populationSize",label+"_times","label",label,"marker","o");
+		writer.addData(label+"_populationSize",pop);
+		writer.addData(label+"_times",times);
+		
+	}
+	
+	public static void export(int logMin, int logMax) {
+		
+		int[] populationSize = new int[logMax-logMin+1];
+		int[] logSample = new int[logMax-logMin+1];
+		int[] sqrtSample = new int[logMax-logMin+1];
+		int[] linearSample = new int[logMax-logMin+1];
+		
+		for (int log = logMin ; log<=logMax ; log++) {
+						
+			int n = (int) Math.pow(2,log);
+			populationSize[log-logMin] = n;
+			logSample[log-logMin] = 5*log;
+			sqrtSample[log-logMin] = (int) (5*Math.sqrt(n));
+			linearSample[log-logMin] = (int) (0.25*n);
+			
+		}
+		
+		XMLWriter writer = new XMLWriter("test",
+				"xlabel","Population size $n$",
+				"ylabel","Maximum average convergence time");
+		
+		plot(writer,populationSize,logSample,"$k = 5 \\log n$");
+		plot(writer,populationSize,sqrtSample,"$k = 5 \\sqrt n$");
+		plot(writer,populationSize,linearSample,"$k = n / 4$");
+		writer.close();
+		
+		
+	}
+	
+	public static void main(String [] args) throws NumberFormatException, FileNotFoundException {
+		
+		if (args.length == 3 && args[0].equals("--explore")) {
 			explore(Integer.valueOf(args[1]),Integer.valueOf(args[2]));
 		}
 		
-		if (args[0].equals("--show")) {
+		else if (args.length == 3 && args[0].equals("--show")) {
 			show(Integer.valueOf(args[1]),Integer.valueOf(args[2]));
 		}
 		
+		else if (args.length == 3 && args[0].equals("--export")) {
+			export(Integer.valueOf(args[1]),Integer.valueOf(args[2]));
+		}
 		
-		
+		else {
+			
+			//export(5,12);
+			
+		}
 	}
 
 }

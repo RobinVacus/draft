@@ -2,6 +2,7 @@ package export;
 
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Scanner;
@@ -34,11 +35,10 @@ public class CSVWriter {
 		
 	}
 	
-	public static int[][] readFile(String filename) {
+	public static int[][] readFile(String filename) throws FileNotFoundException {
 		
 		int[][] result = null;
 		
-		try {			
 		    File file = new File(filename+".csv");
 		    Scanner sc = new Scanner(file);
 		    
@@ -70,19 +70,13 @@ public class CSVWriter {
 			}
 		    
 		    sc.close();
-		    
-		    
-		    
-		} catch (Exception e) {
-			e.printStackTrace();
 
-		}
 		
 		return result;
 		
 	}
 	
-	public static void main(String[] args) {
+	public static void main(String[] args) throws FileNotFoundException {
 		
 		//writeToFile("test",new String[] {"label1","label2"}, new int[][] {{17654,2875},{3987,465}});
 		
