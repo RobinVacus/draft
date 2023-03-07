@@ -79,6 +79,7 @@ public class Statistics {
 	
 	public void update(int iterations) {
 		for (int i=0 ; i<iterations ; i++) {
+			if (i%(iterations/100) == 0) System.out.println((100*i/iterations)+"%");
 			update();
 		}
 	}
@@ -122,11 +123,14 @@ public class Statistics {
 		for (int log = logMin ; log<=logMax ; log++) {
 			
 			int n = (int) Math.pow(2,log);
-			int iterations = 100*n;
 			int k = 5*log;
 			
+			System.out.println("Processing n = "+n+", k = "+k);
 			Statistics stats = new Statistics(n,k);
+			
+			int iterations = 10*n;
 			stats.update(iterations);
+			
 			stats.writeToFile();
 			
 		}
@@ -140,7 +144,7 @@ public class Statistics {
 	}
 	
 	public static void main(String [] args) {
-	
+			
 		if (args[0].equals("--explore")) {
 			explore(Integer.valueOf(args[1]),Integer.valueOf(args[2]));
 		}
@@ -148,6 +152,8 @@ public class Statistics {
 		if (args[0].equals("--show")) {
 			show(Integer.valueOf(args[1]),Integer.valueOf(args[2]));
 		}
+		
+		
 		
 	}
 
