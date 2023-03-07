@@ -1,9 +1,5 @@
 package pull_model;
 
-import java.util.ArrayList;
-
-import tests.ZealotAgent;
-
 /**
  * 
  * A class containing static functions for computing average quantities

@@ -3,6 +3,7 @@ package pull_model;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.function.Function;
 
 import export.CSVWriter;
 import export.XMLWriter;
@@ -124,23 +125,33 @@ public class Statistics {
 	
 	/* Static methods */
 	
-	public static void explore(int logMin, int logMax) {
+	public static class IntegerMapping implements Function<Integer,Integer> {
 		
-		for (int log = logMin ; log<=logMax ; log++) {
-			
-			int n = (int) Math.pow(2,log);
-			int k = 5*log;
-			
-			System.out.println("Processing n = "+n+", k = "+k);
-			Statistics stats = new Statistics(n,k);
-			
-			int iterations = 10*n;
-			stats.update(iterations);
-			
-			stats.writeToFile();
-			
+		Function<Integer,Integer> function;
+		String label;
+		
+		public IntegerMapping(Function<Integer,Integer> function, String label) {
+			this.function = function;
+			this.label = label;
 		}
+
+		@Override
+		public Integer apply(Integer n) {
+			return function.apply(n);
+		}
+		
+		public String toString() {
+			return label;
+		}
+		
 	}
+	
+	public static IntegerMapping[] mappings = {
+		new IntegerMapping(n -> (int) (5*Math.log(n)/Math.log(2)), "$5 \\log n$"),
+		new IntegerMapping(n -> (int) (10*Math.log(n)/Math.log(2)), "$10 \\log n$"),
+		new IntegerMapping(n -> (int) (10*Math.sqrt(n)), "$10 \\sqrt n$"),
+		new IntegerMapping(n -> (int) (n/4), "$n / 4$")
+	};
 	
 	public static Statistics readFile(int n, int k) throws FileNotFoundException {
 		
@@ -148,35 +159,41 @@ public class Statistics {
 		int[][] data = CSVWriter.readFile(filename);
 		return new Statistics(n,k,data);
 		
-		
 	}
 	
-	/*
-	public static Statistics getStatistics(int n, int k) {
+	public static void compute(int logMin, int logMax) {
 		
-		try {
+		for (int log = logMin ; log<=logMax ; log++) {
 			
-			return readFile(n,k);
+			int n = (int) Math.pow(2,log);
 			
-		} catch (FileNotFoundException e) {
-			
-			Statistics stats = new Statistics(n,k);
-			stats.update(10*n);
-			return stats;
+			for (IntegerMapping mapping : mappings) {
+				
+				int k = mapping.apply(n);
+				
+				try {
+					
+					readFile(n,k);
+					System.out.println("Already existing file for n = "+n+", k = "+k);
+					
+				} catch(FileNotFoundException e) {
+					
+					System.out.println("Processing n = "+n+", k = "+k);
+					Statistics stats = new Statistics(n,k);
+					
+					int iterations = 10*n;
+					stats.update(iterations);
+					
+					stats.writeToFile();
+					
+				}
+				
+			}
 			
 		}
-		
-	}
-	*/
-	
-	public static void show(int n, int k) throws FileNotFoundException {
-		
-		Statistics stats = Statistics.readFile(n,k);
-		System.out.println(stats);
-		
 	}
 	
-	public static void plot(XMLWriter writer, int[] populationSize, int[] sampleSize, String label) {
+	public static void plot(XMLWriter writer, int[] populationSize, IntegerMapping mapping) {
 		
 		ArrayList<Integer> pop = new ArrayList<Integer>();
 		ArrayList<Double> times = new ArrayList<Double>();
@@ -184,7 +201,7 @@ public class Statistics {
 		for (int i=0 ; i<populationSize.length ; i++) {
 			
 			int n = populationSize[i];
-			int k = sampleSize[i];
+			int k = mapping.apply(n);
 			try {
 				times.add(readFile(n,k).maxAverageConvergenceTime());
 				pop.add(n);
@@ -194,6 +211,9 @@ public class Statistics {
 			
 		}
 		
+		if (pop.size() == 0) return;
+		
+		String label = mapping.toString();
 		writer.plot(label+"_populationSize",label+"_times","label",label,"marker","o");
 		writer.addData(label+"_populationSize",pop);
 		writer.addData(label+"_times",times);
@@ -203,7 +223,8 @@ public class Statistics {
 	public static void export(int logMin, int logMax) {
 		
 		int[] populationSize = new int[logMax-logMin+1];
-		int[] logSample = new int[logMax-logMin+1];
+		int[] logSample5 = new int[logMax-logMin+1];
+		int[] logSample10 = new int[logMax-logMin+1];
 		int[] sqrtSample = new int[logMax-logMin+1];
 		int[] linearSample = new int[logMax-logMin+1];
 		
@@ -211,19 +232,22 @@ public class Statistics {
 						
 			int n = (int) Math.pow(2,log);
 			populationSize[log-logMin] = n;
-			logSample[log-logMin] = 5*log;
-			sqrtSample[log-logMin] = (int) (5*Math.sqrt(n));
+			logSample5[log-logMin] = 5*log;
+			logSample10[log-logMin] = 10*log;
+			sqrtSample[log-logMin] = (int) (10*Math.sqrt(n));
 			linearSample[log-logMin] = (int) (0.25*n);
 			
 		}
 		
 		XMLWriter writer = new XMLWriter("test",
+				"xscale","log",
 				"xlabel","Population size $n$",
 				"ylabel","Maximum average convergence time");
 		
-		plot(writer,populationSize,logSample,"$k = 5 \\log n$");
-		plot(writer,populationSize,sqrtSample,"$k = 5 \\sqrt n$");
-		plot(writer,populationSize,linearSample,"$k = n / 4$");
+		for (IntegerMapping mapping : mappings) {
+			plot(writer,populationSize,mapping);
+		}
+
 		writer.close();
 		
 		
@@ -231,21 +255,21 @@ public class Statistics {
 	
 	public static void main(String [] args) throws NumberFormatException, FileNotFoundException {
 		
-		if (args.length == 3 && args[0].equals("--explore")) {
-			explore(Integer.valueOf(args[1]),Integer.valueOf(args[2]));
+		if (args.length == 3 && args[0].equals("--compute")) {
+			compute(Integer.valueOf(args[1]),Integer.valueOf(args[2]));
 		}
 		
-		else if (args.length == 3 && args[0].equals("--show")) {
-			show(Integer.valueOf(args[1]),Integer.valueOf(args[2]));
+		else if (args.length == 3 && args[0].equals("--print")) {
+			System.out.println(readFile(Integer.valueOf(args[1]),Integer.valueOf(args[2])));
 		}
 		
-		else if (args.length == 3 && args[0].equals("--export")) {
+		else if (args.length == 3 && args[0].equals("--plotall")) {
 			export(Integer.valueOf(args[1]),Integer.valueOf(args[2]));
 		}
 		
 		else {
 			
-			//export(5,12);
+			export(5,8);
 			
 		}
 	}
