@@ -13,7 +13,7 @@ public class Main {
 	public static void oneExecution() {
 		
 		// Number of agents
-		int n = 1000;
+		int n = 100;
 				
 		// Sample size
 		int sampleSize = 20;
@@ -26,7 +26,7 @@ public class Main {
 				
 		// Then we fill the list with agents randomly initialized
 		for (int i=1 ; i<n ; i++) {
-			agents.add(new TrendAgent(sampleSize,Utils.random.nextInt(100)));
+			agents.add(new MinorityUnanimityAgent(sampleSize,Utils.random.nextInt(2)));
 		}
 			
 		// We create a dynamics (in the parallel setting)
@@ -34,7 +34,7 @@ public class Main {
 		
 		// We export the result of one simulation over 100 rounds,
 		// in which we count the number of agents with opinion 0 (the correct one)
-		dynamics.exportEvolution(1000, new Predicate[] {new Predicate.OpinionPredicate<Integer>(0)});
+		dynamics.exportEvolution(100, new Predicate[] {new Predicate.OpinionPredicate<Integer>(0)});
 		
 	}
 
