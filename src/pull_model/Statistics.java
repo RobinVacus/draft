@@ -10,6 +10,12 @@ import export.XMLWriter;
 
 public class Statistics {
 	
+	public static class TimeOutException extends RuntimeException {
+
+		private static final long serialVersionUID = -7007111101101058847L;
+		
+	}
+	
 	/**
 	 * data[i] is about the configuration where i agents agree with the zealot.
 	 * data[i][0] is the number of records available for this configuration.
@@ -70,6 +76,8 @@ public class Statistics {
 				conf2 += randomOpinion(conf1+1);
 			}
 			conf1 = conf2;
+			
+			if (history.size() > 1000000) throw new TimeOutException();
 			
 		}
 		
@@ -147,9 +155,9 @@ public class Statistics {
 	}
 	
 	public static IntegerMapping[] mappings = {
-		new IntegerMapping(n -> (int) (5*Math.log(n)/Math.log(2)), "$5 \\log n$"),
-		new IntegerMapping(n -> (int) (10*Math.log(n)/Math.log(2)), "$10 \\log n$"),
-		new IntegerMapping(n -> (int) (10*Math.sqrt(n)), "$10 \\sqrt n$"),
+		new IntegerMapping(n -> (int) (5*(Math.log(n)/Math.log(2))), "$5 \\log n$"),
+		new IntegerMapping(n -> (int) (10*(Math.log(n)/Math.log(2))), "$10 \\log n$"),
+		new IntegerMapping(n -> (int) (10*(Math.sqrt(n))), "$10 \\sqrt n$"),
 		new IntegerMapping(n -> (int) (n/4), "$n / 4$")
 	};
 	
@@ -158,6 +166,44 @@ public class Statistics {
 		String filename = "n"+n+"_k"+k;
 		int[][] data = CSVWriter.readFile(filename);
 		return new Statistics(n,k,data);
+		
+	}
+	
+	public static void computeOne(int n, int k, boolean append) {
+		
+		Statistics stats = new Statistics(n,k);
+		
+		try {
+			
+			stats = readFile(n,k);
+			if (!append) {
+				System.out.println("Already existing file for n = "+n+", k = "+k);
+				return;
+			}
+			
+		} catch(FileNotFoundException e) {
+			
+		}
+		
+		System.out.println("Processing n = "+n+", k = "+k);
+		
+		int iterations = 100;
+		try {
+			stats.update(iterations);
+			stats.writeToFile();
+		} catch (TimeOutException e) {
+			System.out.println("Taking too much time. Giving up");
+		}
+		
+	}
+	
+	public static void investigate(int n, boolean append) {
+		
+		for (int k=18 ; k<=n ; k++) {
+			
+			computeOne(n,k,append);
+			
+		}
 		
 	}
 	
@@ -170,26 +216,7 @@ public class Statistics {
 			for (IntegerMapping mapping : mappings) {
 				
 				int k = mapping.apply(n);
-				Statistics stats = new Statistics(n,k);
-				
-				try {
-					
-					stats = readFile(n,k);
-					if (!append) {
-						System.out.println("Already existing file for n = "+n+", k = "+k);
-						continue;
-					}
-					
-				} catch(FileNotFoundException e) {
-						
-				}
-				
-				System.out.println("Processing n = "+n+", k = "+k);
-				
-				int iterations = 10*n;
-				stats.update(iterations);
-				
-				stats.writeToFile();
+				computeOne(n,k,append);
 				
 			}
 			
@@ -226,22 +253,9 @@ public class Statistics {
 	public static void export(int logMin, int logMax) {
 		
 		int[] populationSize = new int[logMax-logMin+1];
-		int[] logSample5 = new int[logMax-logMin+1];
-		int[] logSample10 = new int[logMax-logMin+1];
-		int[] sqrtSample = new int[logMax-logMin+1];
-		int[] linearSample = new int[logMax-logMin+1];
 		
-		for (int log = logMin ; log<=logMax ; log++) {
-						
-			int n = (int) Math.pow(2,log);
-			populationSize[log-logMin] = n;
-			logSample5[log-logMin] = 5*log;
-			logSample10[log-logMin] = 10*log;
-			sqrtSample[log-logMin] = (int) (10*Math.sqrt(n));
-			linearSample[log-logMin] = (int) (0.25*n);
+		for (int log = logMin ; log<=logMax ; log++) populationSize[log-logMin] = (int) Math.pow(2,log);
 			
-		}
-		
 		XMLWriter writer = new XMLWriter("test",
 				"xscale","log",
 				"xlabel","Population size $n$",
@@ -276,6 +290,8 @@ public class Statistics {
 		else {
 			
 			//compute(5,8,true);
+			//compute(9,9,true);
+			//investigate(512,true);
 			
 		}
 	}
